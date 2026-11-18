@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# スキャン結果（調査対象のファイル名・コード断片を含むためコミットしない）
+incompat_report/
+*_report/
+findings*.csv

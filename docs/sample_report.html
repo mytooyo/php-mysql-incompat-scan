@@ -1,0 +1,641 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><title>非互換スキャン結果</title><style>body{font-family:"Yu Gothic UI","Meiryo",sans-serif;font-size:13px;margin:20px;color:#222}h1{font-size:20px}h2{font-size:16px;border-bottom:2px solid #555;margin-top:28px;padding-bottom:3px}table{border-collapse:collapse;margin:8px 0}th,td{border:1px solid #bbb;padding:3px 7px;vertical-align:top;text-align:left}th{background:#eee;white-space:nowrap}td.n{text-align:right;white-space:nowrap}.s高{background:#f8d0d0;font-weight:bold}.s中{background:#fdecc0}.s低{background:#e4eefb}code{font-family:Consolas,"MS Gothic",monospace;font-size:12px;word-break:break-all}details{margin:6px 0;border:1px solid #ccc;padding:4px 8px}summary{cursor:pointer;font-weight:bold}.m{color:#666}.cm{color:#888}mark{background:#ffe54d}</style></head><body>
+<h1>PHP 5.3→8.5 / MySQL 5.1→8.4 非互換スキャン結果</h1>
+<p class="m">対象: <code>/path/to/target</code> ／ 実行: 2026-11-18 09:49:35 ／ 所要 0.0 秒 ／ ツール v1.0.0 ／ 監査ルール: 有効</p>
+<p>全件は <code>findings.csv</code>、ルール別は <code>summary.csv</code>、機械検出できない項目は <code>manual_checklist.csv</code> を参照。本レポートの明細は各ルール先頭 200 件まで。</p>
+<h2>1. 件数サマリ</h2><table><tr><th>重要度</th><th>確定</th><th>要確認</th><th>監査</th><th>計</th></tr>
+<tr><td class="s高">高</td><td class="n">40</td><td class="n">19</td><td class="n">3</td><td class="n">62</td></tr>
+<tr><td class="s中">中</td><td class="n">13</td><td class="n">19</td><td class="n">4</td><td class="n">36</td></tr>
+<tr><td class="s低">低</td><td class="n">3</td><td class="n">2</td><td class="n">1</td><td class="n">6</td></tr>
+<tr><th>計</th><td class="n" colspan="4">104 件 / 13 ファイル走査（うち該当あり 10）</td></tr></table>
+<h2>2. ファイル種別・文字コード</h2><table><tr><th>種別</th><th>ファイル数</th></tr>
+<tr><td>設計書(Office)</td><td class="n">3</td></tr>
+<tr><td>PHPソース</td><td class="n">3</td></tr>
+<tr><td>PHP設定</td><td class="n">2</td></tr>
+<tr><td>MySQL設定</td><td class="n">1</td></tr>
+<tr><td>設計書(テキスト)</td><td class="n">1</td></tr>
+<tr><td>設計書(旧Office簡易抽出)</td><td class="n">1</td></tr>
+<tr><td>設計書(未対応形式)</td><td class="n">1</td></tr>
+<tr><td>SQL/スクリプト/設定</td><td class="n">1</td></tr>
+</table><table><tr><th>文字コード</th><th>ファイル数</th></tr>
+<tr><td>ASCII</td><td class="n">6</td></tr>
+<tr><td>UTF-8</td><td class="n">1</td></tr>
+<tr><td>SJIS(CP932)</td><td class="n">1</td></tr>
+</table>
+<details><summary>未走査・要注意ファイル（3 件）</summary><table><tr><th>ファイル</th><th>種別</th><th>状態</th></tr>
+<tr><td><code>doc/locked.xlsx</code></td><td>設計書(Office)</td><td>読取不可: ZIP として開けない（パスワード保護/破損の可能性）</td></tr>
+<tr><td><code>doc/old.xls</code></td><td>設計書(旧Office簡易抽出)</td><td>簡易抽出（位置は概算・取りこぼしあり。xlsx/docx へ変換して再走査を推奨）</td></tr>
+<tr><td><code>doc/spec.pdf</code></td><td>設計書(未対応形式)</td><td>未対応形式: 目視確認が必要</td></tr>
+</table></details>
+<h2>3. ルール別件数（該当ありのみ）</h2><table><tr><th>ルールID</th><th>Ver</th><th>重要度</th><th>確度</th><th>件数</th><th>ファイル数</th><th>対象</th><th>影響</th><th>修正方針</th><th>参照</th></tr>
+<tr><td><a href="#r-PHP55-01">PHP55-01</a></td><td>PHP5.5/7.0</td><td class="s高">高</td><td>確定</td><td class="n">6</td><td class="n">4</td><td>ext/mysql (mysql_*)</td><td>7.0で削除。Fatal error: Call to undefined function</td><td>mysqli / PDO へ置換（ガイド14節の対応表）。引数順・暗黙接続・エラー処理が変わる</td><td>§2-14 §3-1 §14</td></tr>
+<tr><td><a href="#r-LNK-02">LNK-02</a></td><td>連携</td><td class="s高">高</td><td>確定</td><td class="n">4</td><td class="n">3</td><td>接続文字コードが utf8mb4 以外</td><td>sjis/ujis は機種依存文字が化ける。utf8(mb3) は絵文字・一部漢字が欠落。latin1 は誤宣言DBの疑い</td><td>DB変換後に utf8mb4 へ統一。SJIS運用継続なら cp932</td><td>§13-1〜§13-3 §13-7</td></tr>
+<tr><td><a href="#r-CNF-84">CNF-84</a></td><td>MySQL8.4</td><td class="s高">高</td><td>確定</td><td class="n">3</td><td class="n">2</td><td>8.4 で削除された my.cnf 変数</td><td>mysqld が起動しない（default_authentication_plugin, expire_logs_days, skip-character-set-client-handshake 等）</td><td>authentication_policy / binlog_expire_logs_seconds 等へ。charset は接続側で明示</td><td>§12-2 §12-3</td></tr>
+<tr><td><a href="#r-PHP55-03">PHP55-03</a></td><td>PHP5.5/7.2</td><td class="s高">高</td><td>確定</td><td class="n">2</td><td class="n">2</td><td>ext/mcrypt</td><td>7.2で削除(Fatal)。既存暗号文の復号互換に注意（ゼロパディング、RIJNDAEL_256はOpenSSLに無い）</td><td>openssl_encrypt/decrypt へ。RIJNDAEL_256/Blowfish/DES は復号→AESで再暗号化</td><td>§2-16 §4-8</td></tr>
+<tr><td><a href="#r-PHP70-01">PHP70-01</a></td><td>PHP7.0</td><td class="s高">高</td><td>確定</td><td class="n">2</td><td class="n">1</td><td>ext/ereg (ereg/split 系)</td><td>Fatal error（未定義関数）</td><td>preg_match / preg_replace / preg_split / explode へ（デリミタ・エスケープ差に注意）</td><td>§3-2</td></tr>
+<tr><td><a href="#r-PHP81-01">PHP81-01</a></td><td>PHP8.1</td><td class="s高">高</td><td>要確認</td><td class="n">2</td><td class="n">1</td><td>組込み関数へスーパーグローバルを直接渡している</td><td>未定義キー→null→「null を渡すのは非推奨」(9.0で TypeError)。Warning も発生</td><td>?? &#x27;&#x27; で既定値を与える</td><td>§6-1</td></tr>
+<tr><td><a href="#r-SQL55-01">SQL55-01</a></td><td>MySQL5.5</td><td class="s高">高</td><td>確定</td><td class="n">2</td><td class="n">2</td><td>TYPE=エンジン 構文</td><td>構文エラー</td><td>ENGINE= へ</td><td>§9-2</td></tr>
+<tr><td><a href="#r-SQL57-01b">SQL57-01b</a></td><td>MySQL5.7/8.0</td><td class="s高">高</td><td>要確認</td><td class="n">2</td><td class="n">2</td><td>GROUP BY</td><td>ONLY_FULL_GROUP_BY(5.7既定)で非集約列の SELECT が 1055 エラー。暗黙ソート削除(8.0)で並び順が変わる（サイレント）</td><td>SELECT 列を集約/ANY_VALUE()、ORDER BY を明示</td><td>§10-2 §10-7 §11-6</td></tr>
+<tr><td><a href="#r-SQL57-02">SQL57-02</a></td><td>MySQL5.7</td><td class="s高">高</td><td>確定</td><td class="n">2</td><td class="n">2</td><td>ゼロ日付 &#x27;0000-00-00&#x27;</td><td>NO_ZERO_DATE(strict)で INSERT/DDL がエラー(1292/1067)。旧ダンプが import 不可</td><td>列を NULL 許容にし NULL へ移行。PHP側の判定も修正</td><td>§10-4</td></tr>
+<tr><td><a href="#r-CNF-55">CNF-55</a></td><td>MySQL5.5/5.6</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>5.5/5.6 で削除された my.cnf オプション</td><td>mysqld が起動しない（unknown variable）</td><td>my.cnf を新規作成し代替オプションへ（skip-external-locking, table_open_cache, slow_query_log 等）</td><td>§9-3 §9-17</td></tr>
+<tr><td><a href="#r-CNF-55b">CNF-55b</a></td><td>MySQL5.5</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>[mysqld] 節の default-character-set</td><td>mysqld が起動しない</td><td>character-set-server へ（[client]/[mysql] 節では有効だが mysqlnd は読まない）</td><td>§9-3 §14-2</td></tr>
+<tr><td><a href="#r-CNF-57b">CNF-57b</a></td><td>MySQL5.7</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>オプション名の前方一致省略 (key_buffer= 等)</td><td>5.7 以降は省略形を受け付けず起動失敗</td><td>正式名 (key_buffer_size 等) へ</td><td>§9-3</td></tr>
+<tr><td><a href="#r-CNF-80">CNF-80</a></td><td>MySQL8.0</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>8.0 で削除された my.cnf 変数</td><td>mysqld が起動しない（query_cache_*, innodb_file_format, log_warnings 等）</td><td>行を削除/代替へ。mysqld --validate-config で検証</td><td>§11-10</td></tr>
+<tr><td><a href="#r-ENC-01">ENC-01</a></td><td>PHP5.4+</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>ソースファイルが非 UTF-8</td><td>zend.multibyte 未設定では SJIS の 5C 問題で Parse error。default_charset と不整合で文字化け</td><td>ソースを UTF-8(BOMなし) へ一括変換</td><td>§2-11 §8-5</td></tr>
+<tr><td><a href="#r-ENC-03">ENC-03</a></td><td>PHP5.4+</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>SJIS の 5C 文字（ソ・表・能 等）を含む行</td><td>zend.multibyte なしでは文字列リテラルが壊れる</td><td>ソースを UTF-8 化</td><td>§2-11 §8-5</td></tr>
+<tr><td><a href="#r-INI-06">INI-06</a></td><td>PHP7.0+</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>削除/PECL移動済み拡張のロード</td><td>起動時エラー。当該拡張の関数が使えない</td><td>代替拡張へ移行</td><td>§3 §4-46</td></tr>
+<tr><td><a href="#r-INI-TZ">INI-TZ</a></td><td>PHP7.0</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>php.ini に date.timezone 未設定</td><td>無警告で UTC になる（サイレント）</td><td>Asia/Tokyo を設定</td><td>§2-12 §3-8</td></tr>
+<tr><td><a href="#r-LNK-01">LNK-01</a></td><td>連携</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>SET NAMES / SET CHARACTER SET の直接発行</td><td>エスケープ関数に反映されない（SJIS系では5C問題によるSQLインジェクション）。utf8指定のままだと4バイト文字欠落</td><td>mysqli_set_charset() / DSN charset= で指定</td><td>§13-7 §14</td></tr>
+<tr><td><a href="#r-PHP54-02">PHP54-02</a></td><td>PHP5.4</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>magic_quotes 関連関数</td><td>5.4で機能削除・7.0/8.0で関数削除(Fatal)。magic quotes前提のSQLはインジェクション可能になる</td><td>分岐ごと削除し、SQLはプリペアドステートメントへ</td><td>§2-2 §4-36</td></tr>
+<tr><td><a href="#r-PHP54-03">PHP54-03</a></td><td>PHP5.4</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>呼び出し時参照渡し foo(&amp;$a) の可能性</td><td>Fatal error（コンパイル時）</td><td>関数定義側を function foo(&amp;$a) にし、呼び出し側の &amp; を削除</td><td>§2-3</td></tr>
+<tr><td><a href="#r-PHP54-04">PHP54-04</a></td><td>PHP5.4/8.1</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>htmlspecialchars 系（charset/flags 既定値）</td><td>既定charsetがUTF-8(5.4)。SJIS/EUC-JP文字列は空文字になる。既定flagsがENT_QUOTES|ENT_SUBSTITUTE(8.1)で &#x27; もエスケープ</td><td>第2・第3引数(flags, encoding)の明示有無を確認。内部エンコードに合わせて明示</td><td>§2-4 §6-5</td></tr>
+<tr><td><a href="#r-PHP55-02">PHP55-02</a></td><td>PHP5.5/7.0</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>preg_replace の /e 修飾子</td><td>7.0以降 Warning + null を返し置換結果が消える（サイレント）</td><td>preg_replace_callback へ</td><td>§2-15 §3-4</td></tr>
+<tr><td><a href="#r-PHP70-05">PHP70-05</a></td><td>PHP7.0</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>可変変数/可変プロパティ + 添字（統一変数構文）</td><td>評価順が左→右に変わり別の変数・プロパティを参照する（サイレント）</td><td>旧の意味を保つには ${$a[&#x27;b&#x27;]} / $obj-&gt;{$a[&#x27;b&#x27;]} と {} で明示</td><td>§3-9</td></tr>
+<tr><td><a href="#r-PHP70-07">PHP70-07</a></td><td>PHP7.0/8.0</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>PHP4 形式コンストラクタ</td><td>8.0 でコンストラクタとして呼ばれない（サイレント）</td><td>__construct() へ</td><td>§3-16 §5-14</td></tr>
+<tr><td><a href="#r-PHP72-01">PHP72-01</a></td><td>PHP7.2/8.0</td><td class="s高">高</td><td>監査</td><td class="n">1</td><td class="n">1</td><td>count()/sizeof()</td><td>null/false/文字列を渡すと 8.0 で TypeError（クエリ失敗時の false 等）</td><td>引数が必ず配列/Countableか確認。is_countable()、(array)キャスト</td><td>§4-13</td></tr>
+<tr><td><a href="#r-PHP72-04">PHP72-04</a></td><td>PHP7.2/8.0</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>each()</td><td>8.0で削除(Fatal)</td><td>foreach へ</td><td>§4-16</td></tr>
+<tr><td><a href="#r-PHP74-01">PHP74-01</a></td><td>PHP7.4/8.0</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>波括弧オフセット $str{0}</td><td>8.0で Parse error（ファイル全体がコンパイル不能）</td><td>[ ] へ置換（文字列内の &quot;{$a}&quot; 補間は対象外）</td><td>§4-33</td></tr>
+<tr><td><a href="#r-PHP74-02">PHP74-02</a></td><td>PHP7.4/8.0</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>括弧なしのネスト三項演算子</td><td>8.0で Fatal（コンパイルエラー）</td><td>括弧で結合を明示</td><td>§4-34</td></tr>
+<tr><td><a href="#r-PHP74-03">PHP74-03</a></td><td>PHP7.4/8.0</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>&quot;.&quot; と &quot;+&quot;/&quot;-&quot; の混在</td><td>8.0で優先順位が変わり結果が変わる（サイレント）</td><td>括弧で明示</td><td>§4-35 §5-13</td></tr>
+<tr><td><a href="#r-PHP80-01">PHP80-01</a></td><td>PHP8.0</td><td class="s高">高</td><td>監査</td><td class="n">1</td><td class="n">1</td><td>数値/空文字との緩い比較 (==, !=)</td><td>0 == &quot;abc&quot; が false になる等、数値と非数値文字列の比較結果が変わる（サイレント）</td><td>比較対象の型を確認し === / 明示キャストへ</td><td>§5-1</td></tr>
+<tr><td><a href="#r-PHP80-14">PHP80-14</a></td><td>PHP8.0</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>PDO 接続・エラーモード</td><td>既定が ERRMODE_EXCEPTION。戻り値false判定のコードが PDOException で停止。8.1 で数値がネイティブ型で返る</td><td>例外前提に書き換え。型は ATTR_STRINGIFY_FETCHES で互換維持可</td><td>§5-27 §6-3 §14</td></tr>
+<tr><td><a href="#r-PHP84-01">PHP84-01</a></td><td>PHP8.4</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>暗黙の nullable 引数 (Type $x = null)</td><td>Deprecated（9.0でエラー）</td><td>?Type $x = null へ（Rector で自動置換可）</td><td>§7-8</td></tr>
+<tr><td><a href="#r-PHPX-01">PHPX-01</a></td><td>環境</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>短縮開始タグ &lt;?</td><td>short_open_tag=Off で PHP として解釈されずソースが露出</td><td>&lt;?php へ置換（暫定 short_open_tag=On）</td><td>§8-2</td></tr>
+<tr><td><a href="#r-SQL55-04">SQL55-04</a></td><td>MySQL5.5</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>ENGINE 指定のない CREATE TABLE（.sql）</td><td>InnoDB で作成される</td><td>ENGINE を明示</td><td>§9-1</td></tr>
+<tr><td><a href="#r-SQL56-01">SQL56-01</a></td><td>MySQL5.6/8.0</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>TIMESTAMP 列定義</td><td>explicit_defaults_for_timestamp=ON(8.0既定)で暗黙の DEFAULT/ON UPDATE CURRENT_TIMESTAMP が付かない。NULL代入で現在時刻にならない（サイレント）</td><td>DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP を明示</td><td>§9-9 §11-18</td></tr>
+<tr><td><a href="#r-SQL56-04">SQL56-04</a></td><td>MySQL5.6/8.0</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>GRANT ... IDENTIFIED BY / IDENTIFIED BY PASSWORD</td><td>8.0 で構文エラー（GRANT によるユーザ作成不可）</td><td>CREATE USER → GRANT の2文へ</td><td>§9-15 §10-9 §11-3</td></tr>
+<tr><td><a href="#r-SQL56-05">SQL56-05</a></td><td>MySQL5.6+</td><td class="s高">高</td><td>監査</td><td class="n">1</td><td class="n">1</td><td>LIMIT（ページング）</td><td>同順位行の並びが非決定。ページ間で行が重複/欠落（サイレント）</td><td>ORDER BY に主キー等のタイブレークを追加</td><td>§9-14</td></tr>
+<tr><td><a href="#r-SQL57-01">SQL57-01</a></td><td>MySQL5.7/8.0</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>GROUP BY col ASC/DESC</td><td>8.0 で構文エラー</td><td>ORDER BY を明示</td><td>§10-7 §11-6</td></tr>
+<tr><td><a href="#r-SQL57-03">SQL57-03</a></td><td>MySQL5.7/8.0</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>派生テーブル (FROM (SELECT ...))</td><td>derived_merge で内側 ORDER BY が無視され「グループ内最新行」イディオムが壊れる（サイレント）。UPDATE 対象表の参照は 1093</td><td>ウィンドウ関数 ROW_NUMBER() / 相関サブクエリへ</td><td>§10-6 §11-7</td></tr>
+<tr><td><a href="#r-SQL57-04">SQL57-04</a></td><td>MySQL5.7/8.0</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>PASSWORD() / SET PASSWORD</td><td>8.0 で関数削除</td><td>ALTER USER ... IDENTIFIED BY。アプリ独自認証に使用している場合は password_hash 等へ移行</td><td>§10-9 §11-9</td></tr>
+<tr><td><a href="#r-SQL80-06">SQL80-06</a></td><td>MySQL8.0</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>sql_mode の削除値 (NO_AUTO_CREATE_USER 等)</td><td>起動失敗 / SET sql_mode が 1231 エラー</td><td>文字列から除去</td><td>§10-1 §11-8</td></tr>
+<tr><td><a href="#r-SQL80-09">SQL80-09</a></td><td>MySQL5.5-8.0</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>予約語と同名の列定義</td><td>クォートなしで参照する SQL が構文エラー。ビュー/ルーチンに含むとアップグレード失敗</td><td>アプリ側 SQL のバッククォート有無を確認、またはリネーム</td><td>§10-21 §11-12</td></tr>
+<tr><td><a href="#r-SQL80-09b">SQL80-09b</a></td><td>MySQL5.5-8.0</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>予約語がクォートなしで識別子として使われている可能性</td><td>構文エラー（rank, groups, system, lead, window 等）</td><td>バッククォートで囲む/リネーム</td><td>§10-21 §11-12</td></tr>
+<tr><td><a href="#r-SQL80-10b">SQL80-10b</a></td><td>MySQL8.0</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>latin1 の宣言</td><td>日本語DBでは「誤宣言」（実体は SJIS/UTF-8 バイト列）の疑い。そのまま CONVERT TO すると全データが化ける</td><td>HEX() で実バイト列を確認し、VARBINARY 経由で実エンコードを宣言してから変換</td><td>§13-1</td></tr>
+<tr><td><a href="#r-SQL80-10d">SQL80-10d</a></td><td>MySQL8.0</td><td class="s高">高</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>照合順序の指定</td><td>8.0 既定 utf8mb4_0900_ai_ci は濁点・かな・大小を区別せず NO PAD。既存 general_ci と混在すると 1267</td><td>DB全体で照合順序を統一（日本語は utf8mb4_ja_0900_as_cs / utf8mb4_bin / general_ci 維持）</td><td>§13-4〜§13-6</td></tr>
+<tr><td><a href="#r-SQL84-01">SQL84-01</a></td><td>MySQL8.4</td><td class="s高">高</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>MASTER/SLAVE 系レプリケーション構文・FLUSH HOSTS</td><td>8.4 で構文エラー（監視・フェイルオーバ・バックアップスクリプト）</td><td>SOURCE/REPLICA 系構文へ（SHOW BINARY LOG STATUS, SHOW REPLICA STATUS 等）</td><td>§12-4</td></tr>
+<tr><td><a href="#r-SQL55-02">SQL55-02</a></td><td>MySQL5.5</td><td class="s中">中</td><td>要確認</td><td class="n">4</td><td class="n">4</td><td>MyISAM テーブル</td><td>既定エンジンは InnoDB。FULLTEXT/グループ別AUTO_INCREMENT/テーブルロック前提の挙動差。8.0 でパーティション不可</td><td>InnoDB 化の可否を検討（COUNT(*) 性能、ロック、トランザクション）</td><td>§9-1 §11-16</td></tr>
+<tr><td><a href="#r-DOC-03">DOC-03</a></td><td>設計書</td><td class="s中">中</td><td>要確認</td><td class="n">3</td><td class="n">3</td><td>DB 物理設計・運用方式に関する記載</td><td>エンジン既定変更、レプリケーション構文、クエリキャッシュ削除、採番方式等に影響</td><td>ガイド9〜12節に照らして確認</td><td>§9〜§12</td></tr>
+<tr><td><a href="#r-INI-01">INI-01</a></td><td>PHP5.4-8.x</td><td class="s中">中</td><td>確定</td><td class="n">3</td><td class="n">3</td><td>削除済み php.ini ディレクティブ</td><td>起動時に警告/無視。機能が無くなっている（register_globals, magic_quotes, func_overload 等は挙動に直結）</td><td>php.ini-production をベースに新規作成し、当該行は移植しない。依存コードを修正</td><td>§8-1</td></tr>
+<tr><td><a href="#r-CNF-CHK">CNF-CHK</a></td><td>環境</td><td class="s中">中</td><td>要確認</td><td class="n">2</td><td class="n">1</td><td>値の再確認が必要な my.cnf 設定</td><td>既定値が大きく変わっている/移行方針の決定が必要（sql_mode, 文字コード, 照合, TIMESTAMP, 認証 等）</td><td>新 my.cnf に意図した値を明示</td><td>§9〜§13</td></tr>
+<tr><td><a href="#r-DOC-02">DOC-02</a></td><td>設計書</td><td class="s中">中</td><td>要確認</td><td class="n">2</td><td class="n">2</td><td>文字コード・照合順序に関する記載</td><td>文字コード変換（utf8mb4化）、照合順序（濁点/かな/末尾空白）、バイト長前提の仕様に影響</td><td>ガイド13節に照らして仕様を確認</td><td>§13</td></tr>
+<tr><td><a href="#r-INI-03">INI-03</a></td><td>環境</td><td class="s中">中</td><td>要確認</td><td class="n">2</td><td class="n">1</td><td>値の再確認が必要な php.ini 設定</td><td>既定値・推奨値が変わっている（文字コード、TZ、エラー表示、短縮タグ等）</td><td>新 php.ini へ意図した値を明示的に移植</td><td>§8-2〜§8-15</td></tr>
+<tr><td><a href="#r-SQL57-12">SQL57-12</a></td><td>MySQL5.7</td><td class="s中">中</td><td>監査</td><td class="n">2</td><td class="n">1</td><td>NOT NULL（DEFAULT なし）列</td><td>strict モードで INSERT 時に列省略すると 1364 エラー</td><td>DEFAULT を明示、または INSERT 側で値を指定</td><td>§10-3</td></tr>
+<tr><td><a href="#r-CNF-57c">CNF-57c</a></td><td>MySQL5.7</td><td class="s中">中</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>[mysqld_safe] 節</td><td>systemd 環境では mysqld_safe を使わず、この節は無視される</td><td>log-error, pid-file, open-files-limit 等を [mysqld] / systemd へ移動</td><td>§10-15</td></tr>
+<tr><td><a href="#r-DOC-04">DOC-04</a></td><td>設計書</td><td class="s中">中</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>認証・暗号・バックアップに関する記載</td><td>mcrypt 削除、MySQL ENCODE/PASSWORD 削除、認証プラグイン変更、TLS バージョン、ダンプ手順に影響</td><td>ガイドの該当節に照らして確認</td><td>§4-8 §10-9 §10-10 §11-1 §12-1</td></tr>
+<tr><td><a href="#r-INI-01p">INI-01p</a></td><td>PHP5.4-8.x</td><td class="s中">中</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>ini_set/ini_get で削除済みディレクティブを操作</td><td>効果なし/false を返す</td><td>依存処理を修正</td><td>§8-1</td></tr>
+<tr><td><a href="#r-INI-04">INI-04</a></td><td>環境</td><td class="s中">中</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>.htaccess / httpd.conf の php_value/php_flag</td><td>php-fpm では無効（mod_php 専用）</td><td>.user.ini または FPM pool の php_admin_value へ</td><td>§8-7</td></tr>
+<tr><td><a href="#r-INI-05">INI-05</a></td><td>PHP8.5</td><td class="s中">中</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>zend_extension=opcache</td><td>8.5 で OPcache 常時組込み。行が残ると Warning</td><td>行を削除</td><td>§7-39</td></tr>
+<tr><td><a href="#r-LNK-10">LNK-10</a></td><td>連携</td><td class="s中">中</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>DSN 文字列</td><td>charset 指定の有無、ソケットパス、ドライバ種別を確認</td><td>DSN に charset=utf8mb4 を明示</td><td>§14-2 §14-3</td></tr>
+<tr><td><a href="#r-LNK-12">LNK-12</a></td><td>連携</td><td class="s中">中</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>エスケープ関数による SQL 組み立て</td><td>接続charsetを API で設定していないと不完全。null 渡しは 8.1 で Deprecated</td><td>プリペアドステートメントへ</td><td>§13-7 §14-7</td></tr>
+<tr><td><a href="#r-PHP54-06">PHP54-06</a></td><td>PHP5.4</td><td class="s中">中</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>session_register 系</td><td>Fatal error（未定義関数）</td><td>$_SESSION を直接操作</td><td>§2-6</td></tr>
+<tr><td><a href="#r-PHP73-01b">PHP73-01b</a></td><td>PHP7.3</td><td class="s中">中</td><td>監査</td><td class="n">1</td><td class="n">1</td><td>preg_* 全般（PCRE2 移行）</td><td>不正エスケープ等の厳格化で既存パターンがエラーになりうる</td><td>全パターンを新環境でコンパイルテスト</td><td>§4-27</td></tr>
+<tr><td><a href="#r-PHP73-02">PHP73-02</a></td><td>PHP7.3</td><td class="s中">中</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>ヒアドキュメント本文に終端識別子と同じ語で始まる行</td><td>Parse error / 本文欠落</td><td>識別子を変更</td><td>§4-28</td></tr>
+<tr><td><a href="#r-PHP74-09">PHP74-09</a></td><td>PHP7.4</td><td class="s中">中</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>PEAR ライブラリ / 削除拡張 (wddx, recode, interbase)</td><td>PEARは既定で同梱されない。PEAR::DB/MDB2 は PHP 8 非対応</td><td>Composer パッケージ / PDO へ移行</td><td>§4-46 §8-12</td></tr>
+<tr><td><a href="#r-PHP80-03">PHP80-03</a></td><td>PHP8.0</td><td class="s中">中</td><td>監査</td><td class="n">1</td><td class="n">1</td><td>switch 文</td><td>case は緩い比較。数値と文字列 case の混在で分岐が変わる</td><td>対象と case の型を揃える</td><td>§5-1</td></tr>
+<tr><td><a href="#r-PHP84-02">PHP84-02</a></td><td>PHP8.4</td><td class="s中">中</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>E_STRICT 定数</td><td>Deprecated（定数非推奨・レベル削除）</td><td>E_STRICT を削除</td><td>§7-9</td></tr>
+<tr><td><a href="#r-PHP85-01">PHP85-01</a></td><td>PHP8.5</td><td class="s中">中</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>非標準キャスト名 (integer)/(boolean)/(double)/(binary)</td><td>Deprecated</td><td>(int)/(bool)/(float)/(string) へ一括置換</td><td>§7-23</td></tr>
+<tr><td><a href="#r-PHP85-03">PHP85-03</a></td><td>PHP8.5</td><td class="s中">中</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>__sleep()/__wakeup()</td><td>ソフト非推奨</td><td>__serialize()/__unserialize() を追加</td><td>§7-25</td></tr>
+<tr><td><a href="#r-SQL55-05">SQL55-05</a></td><td>MySQL5.6+</td><td class="s中">中</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>全文検索 (FULLTEXT / MATCH AGAINST)</td><td>InnoDB FTS は最小トークン長・ストップワード・スコアが MyISAM と異なる。日本語は ngram パーサが必要</td><td>WITH PARSER ngram で再インデックス、結果比較</td><td>§9-19 §10-22</td></tr>
+<tr><td><a href="#r-SQL80-01">SQL80-01</a></td><td>MySQL8.0</td><td class="s中">中</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>SQL_CALC_FOUND_ROWS / FOUND_ROWS()</td><td>非推奨（8.0.17）。将来削除</td><td>別途 COUNT(*) を発行</td><td>§11-11</td></tr>
+<tr><td><a href="#r-SQL80-10">SQL80-10</a></td><td>MySQL8.0</td><td class="s中">中</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>utf8 (utf8mb3) の宣言</td><td>4バイト文字（絵文字・一部漢字）が入らない。8.0 で非推奨警告</td><td>utf8mb4 へ変換（行サイズ・索引長・照合順序に注意）</td><td>§13-3 §13-11</td></tr>
+<tr><td><a href="#r-CNF-DEP">CNF-DEP</a></td><td>MySQL8.0-8.4</td><td class="s低">低</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>非推奨の my.cnf 変数</td><td>警告。将来削除（innodb_log_file_size → innodb_redo_log_capacity、slave_* → replica_* 等）</td><td>代替変数へ</td><td>§11-11 §12</td></tr>
+<tr><td><a href="#r-DOC-01">DOC-01</a></td><td>設計書</td><td class="s低">低</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>旧バージョン・旧環境の記載</td><td>前提バージョンの記述箇所。設計書の改訂対象</td><td>移行後バージョンへ改訂し、前提に依存する記述を確認</td><td></td></tr>
+<tr><td><a href="#r-INI-02">INI-02</a></td><td>PHP5.6-8.5</td><td class="s低">低</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>非推奨 php.ini ディレクティブ</td><td>起動時 Deprecated</td><td>default_charset 等の代替へ</td><td>§8-1 §2-22</td></tr>
+<tr><td><a href="#r-PHP85-02">PHP85-02</a></td><td>PHP8.5</td><td class="s低">低</td><td>要確認</td><td class="n">1</td><td class="n">1</td><td>バッククォート演算子</td><td>Deprecated</td><td>shell_exec() へ</td><td>§7-24</td></tr>
+<tr><td><a href="#r-PHP85-04">PHP85-04</a></td><td>PHP8.5</td><td class="s低">低</td><td>確定</td><td class="n">1</td><td class="n">1</td><td>case のセミコロン終端 (case 1;)</td><td>Deprecated</td><td>コロンへ</td><td>§7-26</td></tr>
+<tr><td><a href="#r-SQL80-11b">SQL80-11b</a></td><td>MySQL8.0</td><td class="s低">低</td><td>監査</td><td class="n">1</td><td class="n">1</td><td>整数表示幅 INT(n) / FLOAT(M,D)</td><td>非推奨。SHOW CREATE TABLE から消え、int(11) を解析するコードが壊れる</td><td>表示幅を削除</td><td>§11-11 §11-14</td></tr>
+</table>
+<details><summary>該当 0 件のルール（136 件）</summary><p class="m">CNF-55c log= / language=、CNF-57 5.7 で削除された my.cnf オプション、CNF-84b 8.4 で削除されたオプション (old/new/ssl/innodb)、LNK-03 addslashes() によるエスケープ、LNK-08 接続時初期化コマンド / sql_mode 設定、LNK-09 mysqli に単純対応が無い/挙動差の大きい mysql_* 関数、PHP54-01 $HTTP_*_VARS（register_long_arrays）、PHP55-02b /e 修飾子付き正規表現リテラルの可能性（配列・変数経由）、PHP56-01 $HTTP_RAW_POST_DATA、PHP70-08 予約語と同名のクラス/インターフェイス、PHP70-08b 組込みクラスと同名のクラス定義、PHP72-02 __autoload()、PHP72-03 create_function()、PHP73-01 PCRE2: 文字クラス内の \w- 等のハイフン、PHP80-02 in_array/array_search（strictなし）、PHP80-04 is_resource() 判定、PHP80-20 mysqli 結果取得（false 渡し）、PHP81-02 mysqli 接続・レポートモード、SQL57-05 ENCODE/DECODE/ENCRYPT/DES_* 関数、SQL80-03 クエリキャッシュ構文 (SQL_CACHE 等)、SQL80-05 tx_isolation / tx_read_only、SQL80-07b 単語境界 [[:&lt;:]] [[:&gt;:]]、SQL80-10c sjis / ujis の宣言、SQL84-02 認証プラグイン指定、DOC-05 ミドルウェア・ライブラリ・実行方式に関する記載、ENC-02 UTF-8 BOM 付きソース、INI-03p 実行時の ini_set による重要設定、LNK-05 insert_id / affected_rows、LNK-06 LOAD DATA / INTO OUTFILE、PHP54-05 break 0 / break $n / continue $n、PHP54-07 mysqli 旧別名・レプリケーション関数、PHP54-08 import_request_variables 等、PHP55-04 APC ユーザキャッシュ API (apc_*)、PHP56-02 cURL の &#x27;@ファイル&#x27; アップロード、PHP56-03 mbstring/iconv のエンコーディング設定箇所、PHP56-05 crypt() の salt 省略、PHP56-06 SSL/TLS ストリーム接続、PHP70-02 ASPタグ &lt;% / &lt;script language=&quot;php&quot;&gt;、PHP70-03 7.0 削除関数、PHP70-06 catch (Exception) / 例外ハンドラ、PHP70-10 16進表記の文字列 &quot;0x1A&quot;、PHP71-01 シード固定の乱数 (srand/mt_srand)、PHP71-02 (unset) キャスト、PHP71-03 mb_ereg_replace の &#x27;e&#x27; オプション、PHP71-05 7.x非推奨→8.0削除関数、PHP72-05 $php_errormsg、PHP72-06 parse_str() の第2引数省略、PHP72-07 assert() の文字列引数、PHP72-08 7.2非推奨→8.0削除関数、PHP73-04 大文字小文字非依存の定数 define(..., true)、PHP73-05 7.3非推奨→8.0削除（fgetss, mbereg別名 等）、PHP74-04 implode() の引数逆順、PHP74-05 (real) / is_real()、PHP74-06 money_format 等、PHP80-05 @ 抑止判定 (error_reporting() == 0)、PHP80-06 #[ で始まるコメント、PHP80-07 後発の組込み関数と同名のユーザ定義関数、PHP80-08 引数なしの mktime()、PHP80-09 xmlrpc 拡張削除 / 手続き型ZIP API 非推奨、PHP80-10 削除された filter 定数、PHP80-14b PDO errorInfo()/errorCode() による判定、PHP80-15 usort 系コールバック、PHP80-16 @ エラー抑止演算子、PHP81-02b mysqli のエラー戻り値判定、PHP81-03 数字文字列との厳密比較 (=== &quot;1&quot;)、PHP81-04 組込みインターフェイスの実装、PHP81-06 8.1 非推奨（strftime, FILTER_SANITIZE_STRING 等）、PHP81-12 文字コード自動判定、PHP81-12b エンコード名 &#x27;SJIS&#x27;/&#x27;EUC-JP&#x27; 指定、PHP81-13 OpenSSL レガシー暗号 (BF/DES/RC4)、PHP82-02 &quot;${var}&quot; 形式の文字列補間、PHP82-03 mysqli 自動再接続 / ping、PHP82-04 mbstring の &#x27;HTML-ENTITIES&#x27;/&#x27;BASE64&#x27; 等、PHP84-03 session_set_save_handler()、PHP84-04 xml_set_object()、PHP84-05 trigger_error(..., E_USER_ERROR)、PHP84-06 mysqli 8.4 非推奨API、PHP84-07 round()、PHPX-04 mod_php 依存 (apache_*, PHP_AUTH_*, PATH_INFO)、PHPX-10 外部ライブラリ/フレームワーク利用、SQL55-03 5.5 削除 SQL、SQL56-02 INSERT DELAYED、SQL56-03 YEAR(2) 型、SQL57-06 旧名の空間関数、SQL57-08 information_schema.GLOBAL_STATUS 等、SQL57-09 ALTER IGNORE TABLE、SQL57-10 INSERT IGNORE / UPDATE IGNORE、SQL80-04 EXPLAIN EXTENDED / PROCEDURE ANALYSE、SQL80-07 REGEXP / RLIKE、SQL80-08 information_schema 参照、SQL80-11 ZEROFILL、SQL80-14 DEFINER= 付きオブジェクト、SQL80-15 SQL 文中の \N（NULL の別表記）、SQL80-16 パーティション定義、SQL80-17 ユーザ管理 SQL / mysql.user 直接操作、SQL80-19 UNION、SQL84-03 削除済みクライアントツール、DOC-06 日時・端数処理に関する記載、DOC-07 エラー処理・バッチに関する記載、INI-02p ini_set/ini_get で非推奨ディレクティブを操作、LNK-04 永続接続、LNK-07 複数ステートメント実行、LNK-11 MySQL TLS 接続設定、PHP54-13 スーパーグローバル名の引数、PHP55-05 ロゴGUID関数、PHP70-04 $a = &amp;new Foo、PHP70-11 二重引用符内の \u{、PHP70-13 setlocale のカテゴリ文字列指定、PHP70-14 global $$var、PHP70-19 password_hash の salt オプション、PHP72-12 HMAC に非暗号学的ハッシュ、PHP81-07 $GLOBALS 全体の書き換え/参照、PHP81-09 mysqli 8.1 非推奨API、PHP82-05 utf8_encode/utf8_decode、PHP82-06 &quot;self::m&quot; 形式の callable、PHP82-07 setlocale()、PHP83-01 8.3 非推奨（引数なし get_class 等）、PHP84-08 8.4 非推奨関数/定数、PHP85-05 no-op 解放関数、PHP85-06 PDO::MYSQL_ATTR_* 定数 / uri: DSN、PHP85-07 mysqli_execute() 別名、PHP85-08 8.5 非推奨（$http_response_header 等）、PHP85-09 attach()/detach()（SplObjectStorage の場合）、PHPX-03 $_ENV 参照、PHPX-06 32bit/64bit 依存 (crc32, ip2long)、PHPX-08 eval()、SQL57-11 GET_LOCK()、SQL80-02 ON DUPLICATE KEY UPDATE ... VALUES()、SQL80-03b SQL_NO_CACHE、SQL80-12 BINARY 演算子、SQL80-18 JSON_MERGE()、SQL80-20 インデックスヒント / STRAIGHT_JOIN、SQL80-21 LOCK TABLES、SQL80-22 LENGTH()（バイト長）、SQL84-04 MySQL クライアントツール呼び出し、SQL84-05 SUPER / SET_USER_ID 権限</p></details>
+<h2>4. 該当件数の多いファイル（上位 50）</h2><table><tr><th>ファイル</th><th>件数</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">42</td></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">14</td></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">13</td></tr>
+<tr><td><code>conf/php.ini</code></td><td class="n">8</td></tr>
+<tr><td><code>doc/db.xlsx</code></td><td class="n">8</td></tr>
+<tr><td><code>doc/memo.txt</code></td><td class="n">6</td></tr>
+<tr><td><code>src/lib/sjis.php</code></td><td class="n">4</td></tr>
+<tr><td><code>doc/old.xls</code></td><td class="n">4</td></tr>
+<tr><td><code>doc/basic.docx</code></td><td class="n">3</td></tr>
+<tr><td><code>src/.htaccess</code></td><td class="n">2</td></tr>
+</table>
+<h2>5. 明細（ルール別）</h2>
+<details id="r-PHP55-01"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP55-01 ext/mysql (mysql_*) — 6 件 [確定]</summary>
+<p><b>影響:</b> 7.0で削除。Fatal error: Call to undefined function<br><b>修正方針:</b> mysqli / PDO へ置換（ガイド14節の対応表）。引数順・暗黙接続・エラー処理が変わる<br><b>ガイド:</b> §2-14 §3-1 §14</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>doc/memo.txt</code></td><td class="n">L2</td><td><code>ログイン時は <mark>mysql_query</mark>関数で PASSWORD() を照合する。</code></td></tr>
+<tr><td><code>doc/old.xls</code></td><td class="n">抽出#1(概算位置 0x2C)</td><td><code>関数 <mark>mysql_pconnect</mark> を使用 TYPE=MyISAM</code></td></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L3</td><td><code>$link = <mark>mysql_connect(</mark>$host, $user, $pass) or die(mysql_error());</code></td></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L4</td><td><code><mark>mysql_query(</mark>&quot;SET NAMES sjis&quot;);</code></td></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L6</td><td><code>$res = <mark>mysql_query(</mark>&quot;SELECT SQL_CALC_FOUND_ROWS user_id FROM (SELECT * FROM logs ORDER BY created DESC) x GROUP BY user_id DESC LIMIT 10&quot;);</code></td></tr>
+<tr><td><code>src/lib/sjis.php</code></td><td class="n">L3</td><td><code>echo <mark>mysql_real_escape_string(</mark>$s);</code></td></tr>
+</table>
+</details>
+<details id="r-LNK-02"><summary><span class="s高">&nbsp;高&nbsp;</span> LNK-02 接続文字コードが utf8mb4 以外 — 4 件 [確定]</summary>
+<p><b>影響:</b> sjis/ujis は機種依存文字が化ける。utf8(mb3) は絵文字・一部漢字が欠落。latin1 は誤宣言DBの疑い<br><b>修正方針:</b> DB変換後に utf8mb4 へ統一。SJIS運用継続なら cp932<br><b>ガイド:</b> §13-1〜§13-3 §13-7</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">L2 [client]</td><td><code><mark>default-character-set = utf8</mark></code></td></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">L4 [mysqld]</td><td><code><mark>default-character-set = sjis</mark></code></td></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L4</td><td><code>mysql_query(&quot;<mark>SET NAMES sjis</mark>&quot;);</code></td></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L7</td><td><code>) TYPE=MyISAM DEFAULT <mark>CHARSET=latin1</mark>;</code></td></tr>
+</table>
+</details>
+<details id="r-CNF-84"><summary><span class="s高">&nbsp;高&nbsp;</span> CNF-84 8.4 で削除された my.cnf 変数 — 3 件 [確定]</summary>
+<p><b>影響:</b> mysqld が起動しない（default_authentication_plugin, expire_logs_days, skip-character-set-client-handshake 等）<br><b>修正方針:</b> authentication_policy / binlog_expire_logs_seconds 等へ。charset は接続側で明示<br><b>ガイド:</b> §12-2 §12-3</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">L9 [mysqld]</td><td><code><mark>expire_logs_days</mark> = 7</code></td></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">L11 [mysqld]</td><td><code><mark>skip-character-set-client-handshake</mark></code></td></tr>
+<tr><td><code>doc/basic.docx</code></td><td class="n">段落2</td><td><code>my.cnf: <mark>skip-character-set-client-handshake</mark> を設定</code></td></tr>
+</table>
+</details>
+<details id="r-PHP55-03"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP55-03 ext/mcrypt — 2 件 [確定]</summary>
+<p><b>影響:</b> 7.2で削除(Fatal)。既存暗号文の復号互換に注意（ゼロパディング、RIJNDAEL_256はOpenSSLに無い）<br><b>修正方針:</b> openssl_encrypt/decrypt へ。RIJNDAEL_256/Blowfish/DES は復号→AESで再暗号化<br><b>ガイド:</b> §2-16 §4-8</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>doc/basic.docx</code></td><td class="n">段落1</td><td><code>暗号化は <mark>mcrypt</mark> (MCRYPT_RIJNDAEL_256) を使用。</code></td></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L17</td><td><code>$enc = <mark>mcrypt_encrypt(</mark>MCRYPT_RIJNDAEL_256, $key, $data, MCRYPT_MODE_CBC);</code></td></tr>
+</table>
+</details>
+<details id="r-PHP70-01"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP70-01 ext/ereg (ereg/split 系) — 2 件 [確定]</summary>
+<p><b>影響:</b> Fatal error（未定義関数）<br><b>修正方針:</b> preg_match / preg_replace / preg_split / explode へ（デリミタ・エスケープ差に注意）<br><b>ガイド:</b> §3-2</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L8</td><td><code>$s = <mark>ereg_replace(</mark>&quot;[0-9]+&quot;, &quot;&quot;, $s);</code></td></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L9</td><td><code>$a = <mark>split(</mark>&quot;,&quot;, $csv);</code></td></tr>
+</table>
+</details>
+<details id="r-PHP81-01"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP81-01 組込み関数へスーパーグローバルを直接渡している — 2 件 [要確認]</summary>
+<p><b>影響:</b> 未定義キー→null→「null を渡すのは非推奨」(9.0で TypeError)。Warning も発生<br><b>修正方針:</b> ?? &#x27;&#x27; で既定値を与える<br><b>ガイド:</b> §6-1</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L5</td><td><code>if (get_magic_quotes_gpc()) { $q = <mark>stripslashes($_GET[&#x27;q&#x27;])</mark>; }</code></td></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L18</td><td><code>echo <mark>htmlspecialchars($_GET[&#x27;name&#x27;])</mark>;</code></td></tr>
+</table>
+</details>
+<details id="r-SQL55-01"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL55-01 TYPE=エンジン 構文 — 2 件 [確定]</summary>
+<p><b>影響:</b> 構文エラー<br><b>修正方針:</b> ENGINE= へ<br><b>ガイド:</b> §9-2</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>doc/old.xls</code></td><td class="n">抽出#1(概算位置 0x2C)</td><td><code>関数 mysql_pconnect を使用 <mark>TYPE=MyISAM</mark></code></td></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L7</td><td><code>) <mark>TYPE=MyISAM</mark> DEFAULT CHARSET=latin1;</code></td></tr>
+</table>
+</details>
+<details id="r-SQL57-01b"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL57-01b GROUP BY — 2 件 [要確認]</summary>
+<p><b>影響:</b> ONLY_FULL_GROUP_BY(5.7既定)で非集約列の SELECT が 1055 エラー。暗黙ソート削除(8.0)で並び順が変わる（サイレント）<br><b>修正方針:</b> SELECT 列を集約/ANY_VALUE()、ORDER BY を明示<br><b>ガイド:</b> §10-2 §10-7 §11-6</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>doc/db.xlsx</code></td><td class="n">DB定義!C2</td><td><code>SELECT * FROM m_user <mark>GROUP BY</mark> dept_id</code></td></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L6</td><td><code>$res = mysql_query(&quot;SELECT SQL_CALC_FOUND_ROWS user_id FROM (SELECT * FROM logs ORDER BY created DESC) x <mark>GROUP BY</mark> user_id DESC LIMIT 10&quot;);</code></td></tr>
+</table>
+</details>
+<details id="r-SQL57-02"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL57-02 ゼロ日付 &#x27;0000-00-00&#x27; — 2 件 [確定]</summary>
+<p><b>影響:</b> NO_ZERO_DATE(strict)で INSERT/DDL がエラー(1292/1067)。旧ダンプが import 不可<br><b>修正方針:</b> 列を NULL 許容にし NULL へ移行。PHP側の判定も修正<br><b>ガイド:</b> §10-4</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L16</td><td><code>$sql = &quot;SELECT `id` FROM t WHERE rank = 1 AND d = &#x27;<mark>0000-00-00</mark>&#x27;&quot;;</code></td></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L5</td><td><code>created datetime NOT NULL default &#x27;<mark>0000-00-00</mark> 00:00:00&#x27;,</code></td></tr>
+</table>
+</details>
+<details id="r-CNF-55"><summary><span class="s高">&nbsp;高&nbsp;</span> CNF-55 5.5/5.6 で削除された my.cnf オプション — 1 件 [確定]</summary>
+<p><b>影響:</b> mysqld が起動しない（unknown variable）<br><b>修正方針:</b> my.cnf を新規作成し代替オプションへ（skip-external-locking, table_open_cache, slow_query_log 等）<br><b>ガイド:</b> §9-3 §9-17</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">L5 [mysqld]</td><td><code><mark>skip-locking</mark></code></td></tr>
+</table>
+</details>
+<details id="r-CNF-55b"><summary><span class="s高">&nbsp;高&nbsp;</span> CNF-55b [mysqld] 節の default-character-set — 1 件 [確定]</summary>
+<p><b>影響:</b> mysqld が起動しない<br><b>修正方針:</b> character-set-server へ（[client]/[mysql] 節では有効だが mysqlnd は読まない）<br><b>ガイド:</b> §9-3 §14-2</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">L4 [mysqld]</td><td><code><mark>default-character-set</mark> = sjis</code></td></tr>
+</table>
+</details>
+<details id="r-CNF-57b"><summary><span class="s高">&nbsp;高&nbsp;</span> CNF-57b オプション名の前方一致省略 (key_buffer= 等) — 1 件 [確定]</summary>
+<p><b>影響:</b> 5.7 以降は省略形を受け付けず起動失敗<br><b>修正方針:</b> 正式名 (key_buffer_size 等) へ<br><b>ガイド:</b> §9-3</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">L6 [mysqld]</td><td><code><mark>key_buffer =</mark> 16M</code></td></tr>
+</table>
+</details>
+<details id="r-CNF-80"><summary><span class="s高">&nbsp;高&nbsp;</span> CNF-80 8.0 で削除された my.cnf 変数 — 1 件 [確定]</summary>
+<p><b>影響:</b> mysqld が起動しない（query_cache_*, innodb_file_format, log_warnings 等）<br><b>修正方針:</b> 行を削除/代替へ。mysqld --validate-config で検証<br><b>ガイド:</b> §11-10</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">L7 [mysqld]</td><td><code><mark>query_cache_size</mark> = 32M</code></td></tr>
+</table>
+</details>
+<details id="r-ENC-01"><summary><span class="s高">&nbsp;高&nbsp;</span> ENC-01 ソースファイルが非 UTF-8 — 1 件 [確定]</summary>
+<p><b>影響:</b> zend.multibyte 未設定では SJIS の 5C 問題で Parse error。default_charset と不整合で文字化け<br><b>修正方針:</b> ソースを UTF-8(BOMなし) へ一括変換<br><b>ガイド:</b> §2-11 §8-5</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/lib/sjis.php</code></td><td class="n">(ファイル全体)</td><td><code></code></td></tr>
+</table>
+</details>
+<details id="r-ENC-03"><summary><span class="s高">&nbsp;高&nbsp;</span> ENC-03 SJIS の 5C 文字（ソ・表・能 等）を含む行 — 1 件 [要確認]</summary>
+<p><b>影響:</b> zend.multibyte なしでは文字列リテラルが壊れる<br><b>修正方針:</b> ソースを UTF-8 化<br><b>ガイド:</b> §2-11 §8-5</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/lib/sjis.php</code></td><td class="n">L2</td><td><code>$s = &quot;表示 ソフト&quot;;</code></td></tr>
+</table>
+</details>
+<details id="r-INI-06"><summary><span class="s高">&nbsp;高&nbsp;</span> INI-06 削除/PECL移動済み拡張のロード — 1 件 [確定]</summary>
+<p><b>影響:</b> 起動時エラー。当該拡張の関数が使えない<br><b>修正方針:</b> 代替拡張へ移行<br><b>ガイド:</b> §3 §4-46</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/php.ini</code></td><td class="n">L6</td><td><code><mark>extension=mysql.so</mark></code></td></tr>
+</table>
+</details>
+<details id="r-INI-TZ"><summary><span class="s高">&nbsp;高&nbsp;</span> INI-TZ php.ini に date.timezone 未設定 — 1 件 [確定]</summary>
+<p><b>影響:</b> 無警告で UTC になる（サイレント）<br><b>修正方針:</b> Asia/Tokyo を設定<br><b>ガイド:</b> §2-12 §3-8</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/php.ini</code></td><td class="n">(ファイル全体)</td><td><code>date.timezone の有効な設定行なし</code></td></tr>
+</table>
+</details>
+<details id="r-LNK-01"><summary><span class="s高">&nbsp;高&nbsp;</span> LNK-01 SET NAMES / SET CHARACTER SET の直接発行 — 1 件 [確定]</summary>
+<p><b>影響:</b> エスケープ関数に反映されない（SJIS系では5C問題によるSQLインジェクション）。utf8指定のままだと4バイト文字欠落<br><b>修正方針:</b> mysqli_set_charset() / DSN charset= で指定<br><b>ガイド:</b> §13-7 §14</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L4</td><td><code>mysql_query(&quot;<mark>SET NAMES</mark> sjis&quot;);</code></td></tr>
+</table>
+</details>
+<details id="r-PHP54-02"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP54-02 magic_quotes 関連関数 — 1 件 [確定]</summary>
+<p><b>影響:</b> 5.4で機能削除・7.0/8.0で関数削除(Fatal)。magic quotes前提のSQLはインジェクション可能になる<br><b>修正方針:</b> 分岐ごと削除し、SQLはプリペアドステートメントへ<br><b>ガイド:</b> §2-2 §4-36</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L5</td><td><code>if (<mark>get_magic_quotes_gpc(</mark>)) { $q = stripslashes($_GET[&#x27;q&#x27;]); }</code></td></tr>
+</table>
+</details>
+<details id="r-PHP54-03"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP54-03 呼び出し時参照渡し foo(&amp;$a) の可能性 — 1 件 [要確認]</summary>
+<p><b>影響:</b> Fatal error（コンパイル時）<br><b>修正方針:</b> 関数定義側を function foo(&amp;$a) にし、呼び出し側の &amp; を削除<br><b>ガイド:</b> §2-3</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L27</td><td><code><mark>foo($a, &amp;$b</mark>);</code></td></tr>
+</table>
+</details>
+<details id="r-PHP54-04"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP54-04 htmlspecialchars 系（charset/flags 既定値） — 1 件 [要確認]</summary>
+<p><b>影響:</b> 既定charsetがUTF-8(5.4)。SJIS/EUC-JP文字列は空文字になる。既定flagsがENT_QUOTES|ENT_SUBSTITUTE(8.1)で &#x27; もエスケープ<br><b>修正方針:</b> 第2・第3引数(flags, encoding)の明示有無を確認。内部エンコードに合わせて明示<br><b>ガイド:</b> §2-4 §6-5</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L18</td><td><code>echo <mark>htmlspecialchars(</mark>$_GET[&#x27;name&#x27;]);</code></td></tr>
+</table>
+</details>
+<details id="r-PHP55-02"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP55-02 preg_replace の /e 修飾子 — 1 件 [確定]</summary>
+<p><b>影響:</b> 7.0以降 Warning + null を返し置換結果が消える（サイレント）<br><b>修正方針:</b> preg_replace_callback へ<br><b>ガイド:</b> §2-15 §3-4</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L10</td><td><code>$x = <mark>preg_replace(&#x27;/(\d+)/e&#x27;,</mark> &#x27;foo(&quot;\\1&quot;)&#x27;, $s);</code></td></tr>
+</table>
+</details>
+<details id="r-PHP70-05"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP70-05 可変変数/可変プロパティ + 添字（統一変数構文） — 1 件 [要確認]</summary>
+<p><b>影響:</b> 評価順が左→右に変わり別の変数・プロパティを参照する（サイレント）<br><b>修正方針:</b> 旧の意味を保つには ${$a[&#x27;b&#x27;]} / $obj-&gt;{$a[&#x27;b&#x27;]} と {} で明示<br><b>ガイド:</b> §3-9</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L20</td><td><code>$obj<mark>-&gt;$name[</mark>&#x27;key&#x27;] = 1;</code></td></tr>
+</table>
+</details>
+<details id="r-PHP70-07"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP70-07 PHP4 形式コンストラクタ — 1 件 [確定]</summary>
+<p><b>影響:</b> 8.0 でコンストラクタとして呼ばれない（サイレント）<br><b>修正方針:</b> __construct() へ<br><b>ガイド:</b> §3-16 §5-14</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L21</td><td><code>class User { <mark>function User(</mark>$id) { $this-&gt;id = $id; } function __sleep() { return array(); } }</code></td></tr>
+</table>
+</details>
+<details id="r-PHP72-01"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP72-01 count()/sizeof() — 1 件 [監査]</summary>
+<p><b>影響:</b> null/false/文字列を渡すと 8.0 で TypeError（クエリ失敗時の false 等）<br><b>修正方針:</b> 引数が必ず配列/Countableか確認。is_countable()、(array)キャスト<br><b>ガイド:</b> §4-13</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L13</td><td><code>if ($row[&#x27;status&#x27;] == 0) { $n = <mark>count(</mark>$rows); }</code></td></tr>
+</table>
+</details>
+<details id="r-PHP72-04"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP72-04 each() — 1 件 [確定]</summary>
+<p><b>影響:</b> 8.0で削除(Fatal)<br><b>修正方針:</b> foreach へ<br><b>ガイド:</b> §4-16</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L7</td><td><code>while (list($k, $v) = <mark>each(</mark>$arr)) { echo $str{0}; }</code></td></tr>
+</table>
+</details>
+<details id="r-PHP74-01"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP74-01 波括弧オフセット $str{0} — 1 件 [要確認]</summary>
+<p><b>影響:</b> 8.0で Parse error（ファイル全体がコンパイル不能）<br><b>修正方針:</b> [ ] へ置換（文字列内の &quot;{$a}&quot; 補間は対象外）<br><b>ガイド:</b> §4-33</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L7</td><td><code>while (list($k, $v) = each($arr)) { echo <mark>$str{0}</mark>; }</code></td></tr>
+</table>
+</details>
+<details id="r-PHP74-02"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP74-02 括弧なしのネスト三項演算子 — 1 件 [要確認]</summary>
+<p><b>影響:</b> 8.0で Fatal（コンパイルエラー）<br><b>修正方針:</b> 括弧で結合を明示<br><b>ガイド:</b> §4-34</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L11</td><td><code>$y = $a <mark>? 1 : $b ? 2 :</mark> 3;</code></td></tr>
+</table>
+</details>
+<details id="r-PHP74-03"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP74-03 &quot;.&quot; と &quot;+&quot;/&quot;-&quot; の混在 — 1 件 [要確認]</summary>
+<p><b>影響:</b> 8.0で優先順位が変わり結果が変わる（サイレント）<br><b>修正方針:</b> 括弧で明示<br><b>ガイド:</b> §4-35 §5-13</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L12</td><td><code>echo &quot;total: &quot; <mark>. $a + $b</mark>;</code></td></tr>
+</table>
+</details>
+<details id="r-PHP80-01"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP80-01 数値/空文字との緩い比較 (==, !=) — 1 件 [監査]</summary>
+<p><b>影響:</b> 0 == &quot;abc&quot; が false になる等、数値と非数値文字列の比較結果が変わる（サイレント）<br><b>修正方針:</b> 比較対象の型を確認し === / 明示キャストへ<br><b>ガイド:</b> §5-1</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L13</td><td><code>if ($row[&#x27;status&#x27;] <mark>== 0</mark>) { $n = count($rows); }</code></td></tr>
+</table>
+</details>
+<details id="r-PHP80-14"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP80-14 PDO 接続・エラーモード — 1 件 [要確認]</summary>
+<p><b>影響:</b> 既定が ERRMODE_EXCEPTION。戻り値false判定のコードが PDOException で停止。8.1 で数値がネイティブ型で返る<br><b>修正方針:</b> 例外前提に書き換え。型は ATTR_STRINGIFY_FETCHES で互換維持可<br><b>ガイド:</b> §5-27 §6-3 §14</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L25</td><td><code>$pdo = <mark>new PDO(</mark>&quot;mysql:host=localhost;dbname=app&quot;, $u, $p);</code></td></tr>
+</table>
+</details>
+<details id="r-PHP84-01"><summary><span class="s高">&nbsp;高&nbsp;</span> PHP84-01 暗黙の nullable 引数 (Type $x = null) — 1 件 [確定]</summary>
+<p><b>影響:</b> Deprecated（9.0でエラー）<br><b>修正方針:</b> ?Type $x = null へ（Rector で自動置換可）<br><b>ガイド:</b> §7-8</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L19</td><td><code><mark>function f(Foo $x = null</mark>) {}</code></td></tr>
+</table>
+</details>
+<details id="r-PHPX-01"><summary><span class="s高">&nbsp;高&nbsp;</span> PHPX-01 短縮開始タグ &lt;? — 1 件 [確定]</summary>
+<p><b>影響:</b> short_open_tag=Off で PHP として解釈されずソースが露出<br><b>修正方針:</b> &lt;?php へ置換（暫定 short_open_tag=On）<br><b>ガイド:</b> §8-2</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L1</td><td><code><mark>&lt;?</mark></code></td></tr>
+</table>
+</details>
+<details id="r-SQL55-04"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL55-04 ENGINE 指定のない CREATE TABLE（.sql） — 1 件 [確定]</summary>
+<p><b>影響:</b> InnoDB で作成される<br><b>修正方針:</b> ENGINE を明示<br><b>ガイド:</b> §9-1</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L8</td><td><code>CREATE TABLE t2 (id int, body text, FULLTEXT(body));</code></td></tr>
+</table>
+</details>
+<details id="r-SQL56-01"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL56-01 TIMESTAMP 列定義 — 1 件 [要確認]</summary>
+<p><b>影響:</b> explicit_defaults_for_timestamp=ON(8.0既定)で暗黙の DEFAULT/ON UPDATE CURRENT_TIMESTAMP が付かない。NULL代入で現在時刻にならない（サイレント）<br><b>修正方針:</b> DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP を明示<br><b>ガイド:</b> §9-9 §11-18</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L4</td><td><code>updated <mark>timestamp NOT NULL</mark>,</code></td></tr>
+</table>
+</details>
+<details id="r-SQL56-04"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL56-04 GRANT ... IDENTIFIED BY / IDENTIFIED BY PASSWORD — 1 件 [確定]</summary>
+<p><b>影響:</b> 8.0 で構文エラー（GRANT によるユーザ作成不可）<br><b>修正方針:</b> CREATE USER → GRANT の2文へ<br><b>ガイド:</b> §9-15 §10-9 §11-3</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L9</td><td><code><mark>GRANT ALL ON app.* TO &#x27;app&#x27;@&#x27;%&#x27; IDENTIFIED BY</mark> &#x27;pw&#x27;;</code></td></tr>
+</table>
+</details>
+<details id="r-SQL56-05"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL56-05 LIMIT（ページング） — 1 件 [監査]</summary>
+<p><b>影響:</b> 同順位行の並びが非決定。ページ間で行が重複/欠落（サイレント）<br><b>修正方針:</b> ORDER BY に主キー等のタイブレークを追加<br><b>ガイド:</b> §9-14</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L6</td><td><code>$res = mysql_query(&quot;SELECT SQL_CALC_FOUND_ROWS user_id FROM (SELECT * FROM logs ORDER BY created DESC) x GROUP BY user_id DESC <mark>LIMIT 10</mark>&quot;);</code></td></tr>
+</table>
+</details>
+<details id="r-SQL57-01"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL57-01 GROUP BY col ASC/DESC — 1 件 [確定]</summary>
+<p><b>影響:</b> 8.0 で構文エラー<br><b>修正方針:</b> ORDER BY を明示<br><b>ガイド:</b> §10-7 §11-6</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L6</td><td><code>$res = mysql_query(&quot;SELECT SQL_CALC_FOUND_ROWS user_id FROM (SELECT * FROM logs ORDER BY created DESC) x <mark>GROUP BY user_id DESC</mark> LIMIT 10&quot;);</code></td></tr>
+</table>
+</details>
+<details id="r-SQL57-03"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL57-03 派生テーブル (FROM (SELECT ...)) — 1 件 [要確認]</summary>
+<p><b>影響:</b> derived_merge で内側 ORDER BY が無視され「グループ内最新行」イディオムが壊れる（サイレント）。UPDATE 対象表の参照は 1093<br><b>修正方針:</b> ウィンドウ関数 ROW_NUMBER() / 相関サブクエリへ<br><b>ガイド:</b> §10-6 §11-7</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L6</td><td><code>$res = mysql_query(&quot;SELECT SQL_CALC_FOUND_ROWS user_id <mark>FROM (SELECT</mark> * FROM logs ORDER BY created DESC) x GROUP BY user_id DESC LIMIT 10&quot;);</code></td></tr>
+</table>
+</details>
+<details id="r-SQL57-04"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL57-04 PASSWORD() / SET PASSWORD — 1 件 [要確認]</summary>
+<p><b>影響:</b> 8.0 で関数削除<br><b>修正方針:</b> ALTER USER ... IDENTIFIED BY。アプリ独自認証に使用している場合は password_hash 等へ移行<br><b>ガイド:</b> §10-9 §11-9</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>doc/memo.txt</code></td><td class="n">L2</td><td><code>ログイン時は mysql_query関数で <mark>PASSWORD(</mark>) を照合する。</code></td></tr>
+</table>
+</details>
+<details id="r-SQL80-06"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL80-06 sql_mode の削除値 (NO_AUTO_CREATE_USER 等) — 1 件 [確定]</summary>
+<p><b>影響:</b> 起動失敗 / SET sql_mode が 1231 エラー<br><b>修正方針:</b> 文字列から除去<br><b>ガイド:</b> §10-1 §11-8</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">L12 [mysqld]</td><td><code>sql_mode = <mark>NO_AUTO_CREATE_USER</mark>,NO_ENGINE_SUBSTITUTION</code></td></tr>
+</table>
+</details>
+<details id="r-SQL80-09"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL80-09 予約語と同名の列定義 — 1 件 [要確認]</summary>
+<p><b>影響:</b> クォートなしで参照する SQL が構文エラー。ビュー/ルーチンに含むとアップグレード失敗<br><b>修正方針:</b> アプリ側 SQL のバッククォート有無を確認、またはリネーム<br><b>ガイド:</b> §10-21 §11-12</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L3</td><td><code><mark>rank int</mark> NOT NULL,</code></td></tr>
+</table>
+</details>
+<details id="r-SQL80-09b"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL80-09b 予約語がクォートなしで識別子として使われている可能性 — 1 件 [要確認]</summary>
+<p><b>影響:</b> 構文エラー（rank, groups, system, lead, window 等）<br><b>修正方針:</b> バッククォートで囲む/リネーム<br><b>ガイド:</b> §10-21 §11-12</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L16</td><td><code>$sql = &quot;SELECT `id` FROM t <mark>WHERE rank</mark> = 1 AND d = &#x27;0000-00-00&#x27;&quot;;</code></td></tr>
+</table>
+</details>
+<details id="r-SQL80-10b"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL80-10b latin1 の宣言 — 1 件 [要確認]</summary>
+<p><b>影響:</b> 日本語DBでは「誤宣言」（実体は SJIS/UTF-8 バイト列）の疑い。そのまま CONVERT TO すると全データが化ける<br><b>修正方針:</b> HEX() で実バイト列を確認し、VARBINARY 経由で実エンコードを宣言してから変換<br><b>ガイド:</b> §13-1</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L7</td><td><code>) TYPE=MyISAM DEFAULT <mark>CHARSET=latin1</mark>;</code></td></tr>
+</table>
+</details>
+<details id="r-SQL80-10d"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL80-10d 照合順序の指定 — 1 件 [要確認]</summary>
+<p><b>影響:</b> 8.0 既定 utf8mb4_0900_ai_ci は濁点・かな・大小を区別せず NO PAD。既存 general_ci と混在すると 1267<br><b>修正方針:</b> DB全体で照合順序を統一（日本語は utf8mb4_ja_0900_as_cs / utf8mb4_bin / general_ci 維持）<br><b>ガイド:</b> §13-4〜§13-6</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>doc/db.xlsx</code></td><td class="n">DB定義!B1</td><td><code>エンジン: MyISAM、照合順序 <mark>utf8_general_ci</mark></code></td></tr>
+</table>
+</details>
+<details id="r-SQL84-01"><summary><span class="s高">&nbsp;高&nbsp;</span> SQL84-01 MASTER/SLAVE 系レプリケーション構文・FLUSH HOSTS — 1 件 [確定]</summary>
+<p><b>影響:</b> 8.4 で構文エラー（監視・フェイルオーバ・バックアップスクリプト）<br><b>修正方針:</b> SOURCE/REPLICA 系構文へ（SHOW BINARY LOG STATUS, SHOW REPLICA STATUS 等）<br><b>ガイド:</b> §12-4</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L10</td><td><code><mark>SHOW SLAVE STATUS</mark>;</code></td></tr>
+</table>
+</details>
+<details id="r-SQL55-02"><summary><span class="s中">&nbsp;中&nbsp;</span> SQL55-02 MyISAM テーブル — 4 件 [要確認]</summary>
+<p><b>影響:</b> 既定エンジンは InnoDB。FULLTEXT/グループ別AUTO_INCREMENT/テーブルロック前提の挙動差。8.0 でパーティション不可<br><b>修正方針:</b> InnoDB 化の可否を検討（COUNT(*) 性能、ロック、トランザクション）<br><b>ガイド:</b> §9-1 §11-16</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>doc/db.xlsx</code></td><td class="n">DB定義!B1</td><td><code>エンジン: <mark>MyISAM</mark>、照合順序 utf8_general_ci</code></td></tr>
+<tr><td><code>doc/memo.txt</code></td><td class="n">L1</td><td><code>本システムはPHP5.3、MySQL5.1(<mark>MyISAM</mark>)で稼働。文字コードはShift_JIS。</code></td></tr>
+<tr><td><code>doc/old.xls</code></td><td class="n">抽出#1(概算位置 0x2C)</td><td><code>関数 mysql_pconnect を使用 TYPE=<mark>MyISAM</mark></code></td></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L7</td><td><code>) TYPE=<mark>MyISAM</mark> DEFAULT CHARSET=latin1;</code></td></tr>
+</table>
+</details>
+<details id="r-DOC-03"><summary><span class="s中">&nbsp;中&nbsp;</span> DOC-03 DB 物理設計・運用方式に関する記載 — 3 件 [要確認]</summary>
+<p><b>影響:</b> エンジン既定変更、レプリケーション構文、クエリキャッシュ削除、採番方式等に影響<br><b>修正方針:</b> ガイド9〜12節に照らして確認<br><b>ガイド:</b> §9〜§12</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>doc/db.xlsx</code></td><td class="n">DB定義!B1</td><td><code>エンジン: <mark>MyISAM</mark>、照合順序 utf8_general_ci</code></td></tr>
+<tr><td><code>doc/memo.txt</code></td><td class="n">L1</td><td><code>本システムはPHP5.3、MySQL5.1(<mark>MyISAM</mark>)で稼働。文字コードはShift_JIS。</code></td></tr>
+<tr><td><code>doc/old.xls</code></td><td class="n">抽出#1(概算位置 0x2C)</td><td><code>関数 mysql_pconnect を使用 TYPE=<mark>MyISAM</mark></code></td></tr>
+</table>
+</details>
+<details id="r-INI-01"><summary><span class="s中">&nbsp;中&nbsp;</span> INI-01 削除済み php.ini ディレクティブ — 3 件 [確定]</summary>
+<p><b>影響:</b> 起動時に警告/無視。機能が無くなっている（register_globals, magic_quotes, func_overload 等は挙動に直結）<br><b>修正方針:</b> php.ini-production をベースに新規作成し、当該行は移植しない。依存コードを修正<br><b>ガイド:</b> §8-1</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/php.ini</code></td><td class="n">L1</td><td><code><mark>register_globals</mark> = On</code></td></tr>
+<tr><td><code>doc/db.xlsx</code></td><td class="n">DB定義!C2</td><td><code>※ <mark>register_globals</mark>=On 前提</code></td></tr>
+<tr><td><code>src/.htaccess</code></td><td class="n">L1</td><td><code><mark>php_value mbstring.func_overload</mark> 2</code></td></tr>
+</table>
+</details>
+<details id="r-CNF-CHK"><summary><span class="s中">&nbsp;中&nbsp;</span> CNF-CHK 値の再確認が必要な my.cnf 設定 — 2 件 [要確認]</summary>
+<p><b>影響:</b> 既定値が大きく変わっている/移行方針の決定が必要（sql_mode, 文字コード, 照合, TIMESTAMP, 認証 等）<br><b>修正方針:</b> 新 my.cnf に意図した値を明示<br><b>ガイド:</b> §9〜§13</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">L12 [mysqld]</td><td><code><mark>sql_mode</mark> = NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION</code></td></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">L14 [mysqld_safe]</td><td><code><mark>log-error</mark>=/var/log/mysqld.log</code></td></tr>
+</table>
+</details>
+<details id="r-DOC-02"><summary><span class="s中">&nbsp;中&nbsp;</span> DOC-02 文字コード・照合順序に関する記載 — 2 件 [要確認]</summary>
+<p><b>影響:</b> 文字コード変換（utf8mb4化）、照合順序（濁点/かな/末尾空白）、バイト長前提の仕様に影響<br><b>修正方針:</b> ガイド13節に照らして仕様を確認<br><b>ガイド:</b> §13</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>doc/db.xlsx</code></td><td class="n">DB定義!B1</td><td><code>エンジン: MyISAM、<mark>照合順序</mark> utf8_general_ci</code></td></tr>
+<tr><td><code>doc/memo.txt</code></td><td class="n">L1</td><td><code>本システムはPHP5.3、MySQL5.1(MyISAM)で稼働。<mark>文字コード</mark>はShift_JIS。</code></td></tr>
+</table>
+</details>
+<details id="r-INI-03"><summary><span class="s中">&nbsp;中&nbsp;</span> INI-03 値の再確認が必要な php.ini 設定 — 2 件 [要確認]</summary>
+<p><b>影響:</b> 既定値・推奨値が変わっている（文字コード、TZ、エラー表示、短縮タグ等）<br><b>修正方針:</b> 新 php.ini へ意図した値を明示的に移植<br><b>ガイド:</b> §8-2〜§8-15</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/php.ini</code></td><td class="n">L2</td><td><code><mark>short_open_tag</mark> = On</code></td></tr>
+<tr><td><code>conf/php.ini</code></td><td class="n">L5</td><td><code><mark>error_reporting</mark> = E_ALL &amp; ~E_STRICT</code></td></tr>
+</table>
+</details>
+<details id="r-SQL57-12"><summary><span class="s中">&nbsp;中&nbsp;</span> SQL57-12 NOT NULL（DEFAULT なし）列 — 2 件 [監査]</summary>
+<p><b>影響:</b> strict モードで INSERT 時に列省略すると 1364 エラー<br><b>修正方針:</b> DEFAULT を明示、または INSERT 側で値を指定<br><b>ガイド:</b> §10-3</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L3</td><td><code>rank int <mark>NOT NULL</mark>,</code></td></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L4</td><td><code>updated timestamp <mark>NOT NULL</mark>,</code></td></tr>
+</table>
+</details>
+<details id="r-CNF-57c"><summary><span class="s中">&nbsp;中&nbsp;</span> CNF-57c [mysqld_safe] 節 — 1 件 [確定]</summary>
+<p><b>影響:</b> systemd 環境では mysqld_safe を使わず、この節は無視される<br><b>修正方針:</b> log-error, pid-file, open-files-limit 等を [mysqld] / systemd へ移動<br><b>ガイド:</b> §10-15</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">L13 [mysqld_safe]</td><td><code><mark>[mysqld_safe]</mark></code></td></tr>
+</table>
+</details>
+<details id="r-DOC-04"><summary><span class="s中">&nbsp;中&nbsp;</span> DOC-04 認証・暗号・バックアップに関する記載 — 1 件 [要確認]</summary>
+<p><b>影響:</b> mcrypt 削除、MySQL ENCODE/PASSWORD 削除、認証プラグイン変更、TLS バージョン、ダンプ手順に影響<br><b>修正方針:</b> ガイドの該当節に照らして確認<br><b>ガイド:</b> §4-8 §10-9 §10-10 §11-1 §12-1</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>doc/basic.docx</code></td><td class="n">段落1</td><td><code><mark>暗号化</mark>は mcrypt (MCRYPT_RIJNDAEL_256) を使用。</code></td></tr>
+</table>
+</details>
+<details id="r-INI-01p"><summary><span class="s中">&nbsp;中&nbsp;</span> INI-01p ini_set/ini_get で削除済みディレクティブを操作 — 1 件 [確定]</summary>
+<p><b>影響:</b> 効果なし/false を返す<br><b>修正方針:</b> 依存処理を修正<br><b>ガイド:</b> §8-1</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L28</td><td><code><mark>ini_set(&#x27;mbstring.func_overload&#x27;</mark>, 2);</code></td></tr>
+</table>
+</details>
+<details id="r-INI-04"><summary><span class="s中">&nbsp;中&nbsp;</span> INI-04 .htaccess / httpd.conf の php_value/php_flag — 1 件 [確定]</summary>
+<p><b>影響:</b> php-fpm では無効（mod_php 専用）<br><b>修正方針:</b> .user.ini または FPM pool の php_admin_value へ<br><b>ガイド:</b> §8-7</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/.htaccess</code></td><td class="n">L1</td><td><code><mark>php_value</mark> mbstring.func_overload 2</code></td></tr>
+</table>
+</details>
+<details id="r-INI-05"><summary><span class="s中">&nbsp;中&nbsp;</span> INI-05 zend_extension=opcache — 1 件 [確定]</summary>
+<p><b>影響:</b> 8.5 で OPcache 常時組込み。行が残ると Warning<br><b>修正方針:</b> 行を削除<br><b>ガイド:</b> §7-39</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/php.ini</code></td><td class="n">L7</td><td><code><mark>zend_extension=opcache</mark>.so</code></td></tr>
+</table>
+</details>
+<details id="r-LNK-10"><summary><span class="s中">&nbsp;中&nbsp;</span> LNK-10 DSN 文字列 — 1 件 [要確認]</summary>
+<p><b>影響:</b> charset 指定の有無、ソケットパス、ドライバ種別を確認<br><b>修正方針:</b> DSN に charset=utf8mb4 を明示<br><b>ガイド:</b> §14-2 §14-3</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L25</td><td><code>$pdo = new PDO(&quot;<mark>mysql:host=</mark>localhost;dbname=app&quot;, $u, $p);</code></td></tr>
+</table>
+</details>
+<details id="r-LNK-12"><summary><span class="s中">&nbsp;中&nbsp;</span> LNK-12 エスケープ関数による SQL 組み立て — 1 件 [要確認]</summary>
+<p><b>影響:</b> 接続charsetを API で設定していないと不完全。null 渡しは 8.1 で Deprecated<br><b>修正方針:</b> プリペアドステートメントへ<br><b>ガイド:</b> §13-7 §14-7</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/lib/sjis.php</code></td><td class="n">L3</td><td><code>echo <mark>mysql_real_escape_string(</mark>$s);</code></td></tr>
+</table>
+</details>
+<details id="r-PHP54-06"><summary><span class="s中">&nbsp;中&nbsp;</span> PHP54-06 session_register 系 — 1 件 [確定]</summary>
+<p><b>影響:</b> Fatal error（未定義関数）<br><b>修正方針:</b> $_SESSION を直接操作<br><b>ガイド:</b> §2-6</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>doc/db.xlsx</code></td><td class="n">DB定義!図形#1</td><td><code>セッションは <mark>session_register</mark> で管理する</code></td></tr>
+</table>
+</details>
+<details id="r-PHP73-01b"><summary><span class="s中">&nbsp;中&nbsp;</span> PHP73-01b preg_* 全般（PCRE2 移行） — 1 件 [監査]</summary>
+<p><b>影響:</b> 不正エスケープ等の厳格化で既存パターンがエラーになりうる<br><b>修正方針:</b> 全パターンを新環境でコンパイルテスト<br><b>ガイド:</b> §4-27</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L10</td><td><code>$x = <mark>preg_replace(</mark>&#x27;/(\d+)/e&#x27;, &#x27;foo(&quot;\\1&quot;)&#x27;, $s);</code></td></tr>
+</table>
+</details>
+<details id="r-PHP73-02"><summary><span class="s中">&nbsp;中&nbsp;</span> PHP73-02 ヒアドキュメント本文に終端識別子と同じ語で始まる行 — 1 件 [確定]</summary>
+<p><b>影響:</b> Parse error / 本文欠落<br><b>修正方針:</b> 識別子を変更<br><b>ガイド:</b> §4-28</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L23</td><td><code><mark>EOT</mark> is here</code></td></tr>
+</table>
+</details>
+<details id="r-PHP74-09"><summary><span class="s中">&nbsp;中&nbsp;</span> PHP74-09 PEAR ライブラリ / 削除拡張 (wddx, recode, interbase) — 1 件 [要確認]</summary>
+<p><b>影響:</b> PEARは既定で同梱されない。PEAR::DB/MDB2 は PHP 8 非対応<br><b>修正方針:</b> Composer パッケージ / PDO へ移行<br><b>ガイド:</b> §4-46 §8-12</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L2</td><td><code><mark>require_once &#x27;DB.php</mark>&#x27;;</code></td></tr>
+</table>
+</details>
+<details id="r-PHP80-03"><summary><span class="s中">&nbsp;中&nbsp;</span> PHP80-03 switch 文 — 1 件 [監査]</summary>
+<p><b>影響:</b> case は緩い比較。数値と文字列 case の混在で分岐が変わる<br><b>修正方針:</b> 対象と case の型を揃える<br><b>ガイド:</b> §5-1</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L26</td><td><code><mark>switch (</mark>$x) { case 1; break; }</code></td></tr>
+</table>
+</details>
+<details id="r-PHP84-02"><summary><span class="s中">&nbsp;中&nbsp;</span> PHP84-02 E_STRICT 定数 — 1 件 [確定]</summary>
+<p><b>影響:</b> Deprecated（定数非推奨・レベル削除）<br><b>修正方針:</b> E_STRICT を削除<br><b>ガイド:</b> §7-9</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/php.ini</code></td><td class="n">L5</td><td><code>error_reporting = E_ALL &amp; ~<mark>E_STRICT</mark></code></td></tr>
+</table>
+</details>
+<details id="r-PHP85-01"><summary><span class="s中">&nbsp;中&nbsp;</span> PHP85-01 非標準キャスト名 (integer)/(boolean)/(double)/(binary) — 1 件 [確定]</summary>
+<p><b>影響:</b> Deprecated<br><b>修正方針:</b> (int)/(bool)/(float)/(string) へ一括置換<br><b>ガイド:</b> §7-23</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L14</td><td><code>$v = <mark>(integer)$</mark>_POST[&#x27;v&#x27;];</code></td></tr>
+</table>
+</details>
+<details id="r-PHP85-03"><summary><span class="s中">&nbsp;中&nbsp;</span> PHP85-03 __sleep()/__wakeup() — 1 件 [確定]</summary>
+<p><b>影響:</b> ソフト非推奨<br><b>修正方針:</b> __serialize()/__unserialize() を追加<br><b>ガイド:</b> §7-25</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L21</td><td><code>class User { function User($id) { $this-&gt;id = $id; } <mark>function __sleep(</mark>) { return array(); } }</code></td></tr>
+</table>
+</details>
+<details id="r-SQL55-05"><summary><span class="s中">&nbsp;中&nbsp;</span> SQL55-05 全文検索 (FULLTEXT / MATCH AGAINST) — 1 件 [要確認]</summary>
+<p><b>影響:</b> InnoDB FTS は最小トークン長・ストップワード・スコアが MyISAM と異なる。日本語は ngram パーサが必要<br><b>修正方針:</b> WITH PARSER ngram で再インデックス、結果比較<br><b>ガイド:</b> §9-19 §10-22</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L8</td><td><code>CREATE TABLE t2 (id int, body text, <mark>FULLTEXT</mark>(body));</code></td></tr>
+</table>
+</details>
+<details id="r-SQL80-01"><summary><span class="s中">&nbsp;中&nbsp;</span> SQL80-01 SQL_CALC_FOUND_ROWS / FOUND_ROWS() — 1 件 [確定]</summary>
+<p><b>影響:</b> 非推奨（8.0.17）。将来削除<br><b>修正方針:</b> 別途 COUNT(*) を発行<br><b>ガイド:</b> §11-11</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L6</td><td><code>$res = mysql_query(&quot;SELECT <mark>SQL_CALC_FOUND_ROWS</mark> user_id FROM (SELECT * FROM logs ORDER BY created DESC) x GROUP BY user_id DESC LIMIT 10&quot;);</code></td></tr>
+</table>
+</details>
+<details id="r-SQL80-10"><summary><span class="s中">&nbsp;中&nbsp;</span> SQL80-10 utf8 (utf8mb3) の宣言 — 1 件 [要確認]</summary>
+<p><b>影響:</b> 4バイト文字（絵文字・一部漢字）が入らない。8.0 で非推奨警告<br><b>修正方針:</b> utf8mb4 へ変換（行サイズ・索引長・照合順序に注意）<br><b>ガイド:</b> §13-3 §13-11</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>doc/db.xlsx</code></td><td class="n">DB定義!B1</td><td><code>エンジン: MyISAM、照合順序 <mark>utf8_general_ci</mark></code></td></tr>
+</table>
+</details>
+<details id="r-CNF-DEP"><summary><span class="s低">&nbsp;低&nbsp;</span> CNF-DEP 非推奨の my.cnf 変数 — 1 件 [確定]</summary>
+<p><b>影響:</b> 警告。将来削除（innodb_log_file_size → innodb_redo_log_capacity、slave_* → replica_* 等）<br><b>修正方針:</b> 代替変数へ<br><b>ガイド:</b> §11-11 §12</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/my.cnf</code></td><td class="n">L10 [mysqld]</td><td><code><mark>innodb_log_file_size</mark> = 256M</code></td></tr>
+</table>
+</details>
+<details id="r-DOC-01"><summary><span class="s低">&nbsp;低&nbsp;</span> DOC-01 旧バージョン・旧環境の記載 — 1 件 [要確認]</summary>
+<p><b>影響:</b> 前提バージョンの記述箇所。設計書の改訂対象<br><b>修正方針:</b> 移行後バージョンへ改訂し、前提に依存する記述を確認<br><b>ガイド:</b> </p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>doc/memo.txt</code></td><td class="n">L1</td><td><code>本システムは<mark>PHP5.3</mark>、MySQL5.1(MyISAM)で稼働。文字コードはShift_JIS。</code></td></tr>
+</table>
+</details>
+<details id="r-INI-02"><summary><span class="s低">&nbsp;低&nbsp;</span> INI-02 非推奨 php.ini ディレクティブ — 1 件 [確定]</summary>
+<p><b>影響:</b> 起動時 Deprecated<br><b>修正方針:</b> default_charset 等の代替へ<br><b>ガイド:</b> §8-1 §2-22</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>conf/php.ini</code></td><td class="n">L4</td><td><code><mark>mbstring.internal_encoding</mark> = EUC-JP</code></td></tr>
+</table>
+</details>
+<details id="r-PHP85-02"><summary><span class="s低">&nbsp;低&nbsp;</span> PHP85-02 バッククォート演算子 — 1 件 [要確認]</summary>
+<p><b>影響:</b> Deprecated<br><b>修正方針:</b> shell_exec() へ<br><b>ガイド:</b> §7-24</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L15</td><td><code>$out = <mark>`ls -la`</mark>;</code></td></tr>
+</table>
+</details>
+<details id="r-PHP85-04"><summary><span class="s低">&nbsp;低&nbsp;</span> PHP85-04 case のセミコロン終端 (case 1;) — 1 件 [確定]</summary>
+<p><b>影響:</b> Deprecated<br><b>修正方針:</b> コロンへ<br><b>ガイド:</b> §7-26</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/index.php</code></td><td class="n">L26</td><td><code>switch ($x) { <mark>case 1;</mark> break; }</code></td></tr>
+</table>
+</details>
+<details id="r-SQL80-11b"><summary><span class="s低">&nbsp;低&nbsp;</span> SQL80-11b 整数表示幅 INT(n) / FLOAT(M,D) — 1 件 [監査]</summary>
+<p><b>影響:</b> 非推奨。SHOW CREATE TABLE から消え、int(11) を解析するコードが壊れる<br><b>修正方針:</b> 表示幅を削除<br><b>ガイド:</b> §11-11 §11-14</p>
+<table><tr><th>ファイル</th><th>位置</th><th>行抜粋</th></tr>
+<tr><td><code>src/schema.sql</code></td><td class="n">L2</td><td><code>id <mark>int(11)</mark> NOT NULL auto_increment,</code></td></tr>
+</table>
+</details>
+<h2>6. 機械検出できない確認項目</h2><table><tr><th>ID</th><th>Ver</th><th>重要度</th><th>確認対象</th><th>確認方法</th><th>参照</th></tr>
+<tr><td>M-01</td><td>PHP8.0</td><td class="s高">高</td><td>非数値文字列/配列/null への算術・比較（型は静的に判定不能）</td><td>新環境で error_reporting=E_ALL のログを収集（TypeError / Warning: A non-numeric value）</td><td>§5-1〜§5-3</td></tr>
+<tr><td>M-02</td><td>PHP8.0</td><td class="s高">高</td><td>ゼロ除算（/ と %）が DivisionByZeroError</td><td>除算箇所の分母が 0 になるケースのテスト</td><td>§5-4</td></tr>
+<tr><td>M-03</td><td>PHP8.0</td><td class="s高">高</td><td>非 static メソッドの static 呼び出し（Error）</td><td>PHPCompatibility / PHPStan、または実行ログ</td><td>§3-16 §5-14</td></tr>
+<tr><td>M-04</td><td>PHP8.0</td><td class="s高">高</td><td>継承時のメソッドシグネチャ非互換（Fatal）</td><td>対象バージョンの php -l / 全クラスのロードテスト</td><td>§5-15</td></tr>
+<tr><td>M-05</td><td>PHP8.0</td><td class="s高">高</td><td>未定義定数（クォート忘れ $a[key]）が Error、未定義変数/キーが Warning</td><td>実行ログ収集</td><td>§5-10</td></tr>
+<tr><td>M-06</td><td>PHP8.0</td><td class="s高">高</td><td>内部関数の引数型不正が TypeError / ValueError（strlen([]) explode(&quot;&quot;,..) 等）</td><td>実行ログ収集、PHPStan</td><td>§5-8 §5-9</td></tr>
+<tr><td>M-07</td><td>PHP8.1</td><td class="s高">高</td><td>内部関数への null 渡し（Deprecated、9.0 で TypeError）</td><td>実行ログの「Passing null to parameter」を集計</td><td>§6-1</td></tr>
+<tr><td>M-08</td><td>PHP8.2</td><td class="s高">高</td><td>動的プロパティ（未宣言プロパティへの代入）</td><td>実行ログの「Creation of dynamic property」を集計</td><td>§6-20</td></tr>
+<tr><td>M-09</td><td>PHP8.1</td><td class="s中">中</td><td>float→int の暗黙変換、false からの配列自動生成</td><td>実行ログ収集</td><td>§6-9 §6-11</td></tr>
+<tr><td>M-10</td><td>PHP7.0</td><td class="s中">中</td><td>foreach 内での current()/next()、list() の代入順、func_get_args() の変更後値</td><td>該当イディオムの目視、テスト</td><td>§3-14 §3-15 §3-19</td></tr>
+<tr><td>M-11</td><td>PHP7.3</td><td class="s中">中</td><td>switch 内の continue（Warning）</td><td>対象バージョンの php -l</td><td>§4-29</td></tr>
+<tr><td>M-12</td><td>PHP7.2</td><td class="s高">高</td><td>mbstring.func_overload 有効環境での strlen/substr/strpos 等（バイト単位に変わる）</td><td>php.ini の func_overload 値を確認し、有効なら全該当関数を mb_* へ</td><td>§4-17</td></tr>
+<tr><td>M-13</td><td>PHP8.5</td><td class="s中">中</td><td>null の配列オフセット、非数値文字列の ++、#[NoDiscard] 戻り値破棄</td><td>実行ログ収集</td><td>§7-27 §7-28 §7-40</td></tr>
+<tr><td>M-14</td><td>環境</td><td class="s高">高</td><td>全 PHP ファイルの構文エラー</td><td>対象バージョンで find . -name &quot;*.php&quot; | xargs -n1 php -l</td><td>§16</td></tr>
+<tr><td>M-15</td><td>MySQL5.7</td><td class="s高">高</td><td>strict モード違反（型不正・桁あふれ・NOT NULL 省略・空文字の数値列挿入）</td><td>general_log を新DBで再生し SHOW WARNINGS / エラーを収集</td><td>§10-3</td></tr>
+<tr><td>M-16</td><td>MySQL5.7</td><td class="s高">高</td><td>ONLY_FULL_GROUP_BY 違反（SELECT 列と GROUP BY の不整合）</td><td>全 GROUP BY クエリを新DBで実行（1055/3065）</td><td>§10-2</td></tr>
+<tr><td>M-17</td><td>MySQL8.0</td><td class="s高">高</td><td>GROUP BY の暗黙ソート依存、ORDER BY なし一覧の並び順</td><td>旧新DBで結果比較（pt-upgrade 等）</td><td>§11-6</td></tr>
+<tr><td>M-18</td><td>MySQL8.0</td><td class="s高">高</td><td>照合順序の意味変更（濁点/かな同一視、NO PAD、UNIQUE 重複）</td><td>ガイド16節の調査SQL、テストデータ（は/ば/ぱ、末尾空白）</td><td>§13-4 §13-5</td></tr>
+<tr><td>M-19</td><td>MySQL8.0</td><td class="s高">高</td><td>latin1 誤宣言・機種依存文字・4バイト文字の実データ</td><td>SELECT HEX(col) によるサンプリング</td><td>§13-1〜§13-3</td></tr>
+<tr><td>M-20</td><td>MySQL5.6</td><td class="s高">高</td><td>旧時刻フォーマット列（5.6.4 以前作成の DATETIME/TIMESTAMP/TIME）</td><td>mysqlcheck --check-upgrade → ALTER TABLE ... FORCE</td><td>§9-10</td></tr>
+<tr><td>M-21</td><td>MySQL8.0</td><td class="s高">高</td><td>データディクショナリ移行の阻害要因（予約語、旧構文を含むビュー/ルーチン、MyISAMパーティション）</td><td>MySQL Shell util.checkForServerUpgrade()</td><td>§11-16</td></tr>
+<tr><td>M-22</td><td>MySQL8.4</td><td class="s高">高</td><td>mysql_native_password ユーザ / 旧16桁ハッシュ</td><td>SELECT user,host,plugin FROM mysql.user</td><td>§9-8 §12-1</td></tr>
+<tr><td>M-23</td><td>MySQL8.0</td><td class="s中">中</td><td>実行計画の退行（オプティマイザ変更）</td><td>スロークエリログ比較、EXPLAIN</td><td>§9-14 §11-22</td></tr>
+<tr><td>M-24</td><td>MySQL8.0</td><td class="s中">中</td><td>眠っている EVENT（event_scheduler=ON 既定で動き出す）</td><td>SHOW EVENTS</td><td>§11-24</td></tr>
+<tr><td>M-25</td><td>連携</td><td class="s高">高</td><td>DB エラー時のフロー（戻り値判定→例外）、数値型（文字列→int/float）</td><td>異常系テスト、JSON API のスナップショット比較</td><td>§14-5 §14-6</td></tr>
+<tr><td>M-26</td><td>連携</td><td class="s中">中</td><td>mysqlnd が my.cnf [client] を読まないことによる charset/socket の欠落</td><td>接続コードで charset・socket を明示しているか確認</td><td>§14-2</td></tr>
+<tr><td>M-27</td><td>環境</td><td class="s中">中</td><td>32bit→64bit 移行（整数幅、crc32/ip2long の符号）</td><td>旧サーバのアーキテクチャ確認、保存値の形式確認</td><td>§3-24</td></tr>
+<tr><td>M-28</td><td>設計書</td><td class="s中">中</td><td>PDF・画像・パスワード付き Office・旧形式(xls/doc)の設計書</td><td>本ツールは未対応/簡易抽出。目視または xlsx/docx へ変換して再走査</td><td></td></tr>
+</table>
+<h2>7. 本ツールの限界</h2><ul><li>行単位の正規表現照合。複数行にまたがる文、変数経由で組み立てられる SQL・関数名、eval は検出できない。</li><li>型に依存する非互換（比較・算術・null 渡し・動的プロパティ等）は静的に判定できない。監査ルール（--audit）は候補を広く拾うのみ。</li><li>「要確認」は誤検出を含む。「0 件」は該当なしの証明ではない（特に設計書は表記ゆれがある）。</li><li>コメント行の判定は簡易（グレー表示）。旧形式 Office (xls/doc/ppt) は文字列の簡易抽出で位置は概算。PDF・画像・パスワード付きファイルは未対応。</li></ul></body></html>
